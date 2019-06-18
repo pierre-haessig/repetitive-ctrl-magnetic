@@ -20,7 +20,7 @@ package MagneticTestCtrl "About the control of the voltage of magnetic testbench
       Diagram(graphics = {Text(origin = {-11, 56}, extent = {{-63, 12}, {63, -12}}, textString = "Rep controller with the magnetic experiment")}));end Experiment;
 
 model MagBench
-Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = 100, i(fixed = false, start = 0))  annotation(
+Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = 100, i(fixed = false))  annotation(
     Placement(visible = true, transformation(origin = {30, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Magnetic.FluxTubes.Basic.Ground groundMag annotation(
     Placement(visible = true, transformation(origin = {40, -60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -32,17 +32,21 @@ Modelica.Blocks.Interfaces.RealOutput ym annotation(
     Placement(visible = true, transformation(origin = {-30, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Blocks.Interfaces.RealInput u annotation(
     Placement(visible = true, transformation(origin = {-100, -30}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0)));
-replaceable Modelica.Magnetic.FluxTubes.Shapes.HysteresisAndMagnets.GenericHystTellinenSoft testCore( MagRel(fixed = true, start = 0))  "core shaped magnetic material under test" annotation(
+replaceable Modelica.Magnetic.FluxTubes.Shapes.HysteresisAndMagnets.GenericHystTellinenSoft testCore( MagRel(fixed = true, start = 0.1))  "core shaped magnetic material under test" annotation(
     Placement(visible = true, transformation(origin = {70, -10}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
 Modelica.Electrical.Analog.Basic.Ground ground annotation(
     Placement(visible = true, transformation(origin = {-50, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-//Modelica.Electrical.Analog.Basic.Resistor Rpar(R = 1e3)  "parallel resistor" annotation(
-//    Placement(visible = true, transformation(origin = {2, -62}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+Modelica.Electrical.Analog.Basic.Resistor Rpar(R = 1e3)  "parallel resistor" annotation(
+    Placement(visible = true, transformation(origin = {4, -30}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
 Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
     Placement(visible = true, transformation(origin = {-20, -20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     Modelica.Electrical.Analog.Sources.SignalVoltage vPrim annotation(
       Placement(visible = true, transformation(origin = {-50, -30}, extent = {{-10, 10}, {10, -10}}, rotation = -90)));
   equation
+    connect(Rpar.n, primary.n) annotation(
+      Line(points = {{4, -40}, {20, -40}, {20, -40}, {20, -40}}, color = {0, 0, 255}));
+    connect(Rpar.p, primary.p) annotation(
+      Line(points = {{4, -20}, {20, -20}, {20, -20}, {20, -20}}, color = {0, 0, 255}));
     connect(r_prim.n, primary.p) annotation(
       Line(points = {{-10, -20}, {20, -20}, {20, -20}, {20, -20}}, color = {0, 0, 255}));
     connect(vPrim.p, r_prim.p) annotation(
@@ -165,11 +169,13 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       extends Modelica.Icons.Example;
   MagBench magBench annotation(
         Placement(visible = true, transformation(origin = {32, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Pulse pulse(amplitude = 2, offset = -1, period = 1 / 50)  annotation(
+  Modelica.Blocks.Sources.Pulse pulse(amplitude = 2, offset = -1, period = 1 / 50, startTime = -0.25 / 50)  annotation(
         Placement(visible = true, transformation(origin = {-28, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     equation
       connect(pulse.y, magBench.u) annotation(
         Line(points = {{-16, 0}, {18, 0}, {18, 0}, {20, 0}}, color = {0, 0, 127}));
+    annotation(
+        experiment(StartTime = 0, StopTime = 0.1, Tolerance = 1e-6, Interval = 2e-05));
     end testMagBench;
   end tests;
   annotation(
