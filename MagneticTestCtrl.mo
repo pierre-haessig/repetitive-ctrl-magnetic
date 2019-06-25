@@ -1,36 +1,57 @@
 package MagneticTestCtrl "About the control of the voltage of magnetic testbench in order to match a B(t) reference in the magnetic sample. Pierre Haessig 2019"
   extends Modelica.Icons.Package;
 
-  model Experiment
+  model Experiment "Magnetic test bench in closed loop with the repetitive controller"
     extends Modelica.Icons.Example;
+    
+    parameter Modelica.SIunits.Frequency f0=50 "fundamental frequency of the magnetic test";
+    parameter Modelica.SIunits.Voltage a=3 "amplitude of the reference signal";
+    
     MagneticTestCtrl.MagBench magBench annotation(
-      Placement(visible = true, transformation(origin = {10, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-    MagneticTestCtrl.MagCtrl magCtrl(f = 50, k = 1, tau = 1e-4)  annotation(
-      Placement(visible = true, transformation(origin = {-30, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Pulse ref(amplitude = 2, offset = -1, period = 1 / 50)  annotation(
-      Placement(visible = true, transformation(origin = {-90, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+      Placement(visible = true, transformation(origin = {70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+    MagneticTestCtrl.RepCtrl ctrl(f0 = f0, fc = 1e3, k = 1) "Repetive control for voltage" annotation(
+      Placement(visible = true, transformation(origin = {30, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Pulse squareRef(amplitude = 2 * a, offset = -a, period = 1 / f0, startTime = -0.25 / f0)  "square reference signal" annotation(
+      Placement(visible = true, transformation(origin = {-70, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Sine sineRef(amplitude = a, freqHz = f0, phase = 1.5708) "sine wave reference" annotation(
+      Placement(visible = true, transformation(origin = {-70, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Logical.Switch switchRef "switch between sine and pulse reference signals" annotation(
+      Placement(visible = true, transformation(origin = {-20, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.BooleanConstant useSine(k = false)  annotation(
+      Placement(visible = true, transformation(origin = {-70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   equation
-    connect(ref.y, magCtrl.ysp) annotation(
-      Line(points = {{-78, 10}, {-70, 10}, {-70, 14}, {-42, 14}, {-42, 14}}, color = {0, 0, 127}));
-    connect(magBench.ym, magCtrl.ym) annotation(
-      Line(points = {{22, 10}, {40, 10}, {40, -20}, {-60, -20}, {-60, 6}, {-42, 6}, {-42, 6}}, color = {0, 0, 127}));
-    connect(magCtrl.u, magBench.u) annotation(
-      Line(points = {{-18, 10}, {-2, 10}, {-2, 10}, {-2, 10}}, color = {0, 0, 127}));
+  connect(squareRef.y, switchRef.u3) annotation(
+      Line(points = {{-58, -30}, {-50, -30}, {-50, 2}, {-32, 2}, {-32, 2}}, color = {0, 0, 127}));
+  connect(sineRef.y, switchRef.u1) annotation(
+      Line(points = {{-58, 50}, {-46, 50}, {-46, 18}, {-32, 18}, {-32, 18}}, color = {0, 0, 127}));
+  connect(useSine.y, switchRef.u2) annotation(
+      Line(points = {{-58, 10}, {-32, 10}, {-32, 10}, {-32, 10}}, color = {255, 0, 255}));
+  connect(switchRef.y, ctrl.ysp) annotation(
+      Line(points = {{-8, 10}, {0, 10}, {0, 14}, {18, 14}, {18, 14}}, color = {0, 0, 127}));
+  connect(magBench.ym, ctrl.ym) annotation(
+      Line(points = {{81, 10}, {87.75, 10}, {87.75, 10}, {90.5, 10}, {90.5, 10}, {100, 10}, {100, -20}, {0, -20}, {0, 6}, {18, 6}}, color = {0, 0, 127}));
+  connect(ctrl.u, magBench.u) annotation(
+      Line(points = {{41, 10}, {57, 10}}, color = {0, 0, 127}));
   annotation(
-      Diagram(graphics = {Text(origin = {-11, 56}, extent = {{-63, 12}, {63, -12}}, textString = "Rep controller with the magnetic experiment")}));end Experiment;
+      Diagram(graphics = {Text(origin = {23, 68}, extent = {{-63, 12}, {63, -12}}, textString = "Rep controller with the magnetic experiment"), Text(origin = {22, 58}, extent = {{-64, 4}, {64, -4}}, textString = "tracking of secondary voltage reference", textStyle = {TextStyle.Italic})}, coordinateSystem(initialScale = 0.1)),
+      experiment(StartTime = 0, StopTime = 0.1, Tolerance = 1e-6, Interval = 2e-05));end Experiment;
 
 model MagBench
-Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = 100, i(fixed = true))  "primary winding" annotation(
+
+parameter Real n1(min=Modelica.Constants.eps)=100 "Number of turns on primary winding";
+parameter Real n2(min=Modelica.Constants.eps)=100 "Number of turns on secondary winding";
+
+Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = n1, i(fixed = true))  "primary winding" annotation(
       Placement(visible = true, transformation(origin = {30, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Magnetic.FluxTubes.Basic.Ground groundMag annotation(
     Placement(visible = true, transformation(origin = {40, -60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance secondary(N = 100, i(fixed = false))  "secondary winding" annotation(
+Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance secondary(N = n2, i(fixed = false))  "secondary winding" annotation(
       Placement(visible = true, transformation(origin = {30, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Electrical.Analog.Sensors.VoltageSensor vSec annotation(
     Placement(visible = true, transformation(origin = {-50, 10}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-Modelica.Blocks.Interfaces.RealOutput ym annotation(
+Modelica.Blocks.Interfaces.RealOutput ym "voltage on secondary side" annotation(
     Placement(visible = true, transformation(origin = {-30, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-Modelica.Blocks.Interfaces.RealInput u annotation(
+Modelica.Blocks.Interfaces.RealInput u "voltage on primary side" annotation(
     Placement(visible = true, transformation(origin = {-100, -30}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0)));
 replaceable Modelica.Magnetic.FluxTubes.Shapes.HysteresisAndMagnets.GenericHystTellinenSoft core( MagRel(fixed = true, start = 0.), includeEddyCurrents = true)  "core shaped magnetic material under test" annotation(
     Placement(visible = true, transformation(origin = {70, -10}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
@@ -40,7 +61,13 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) "resistance of the pri
       Placement(visible = true, transformation(origin = {-20, -20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     Modelica.Electrical.Analog.Sources.SignalVoltage vPrim annotation(
       Placement(visible = true, transformation(origin = {-50, -30}, extent = {{-10, 10}, {10, -10}}, rotation = -90)));
+  Modelica.Blocks.Interfaces.RealOutput B "B field in core material" annotation(
+      Placement(visible = true, transformation(origin = {90, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Interfaces.RealOutput H "H field in core material" annotation(
+      Placement(visible = true, transformation(origin = {90, -90}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   equation
+    B = core.B;
+    H = core.H;
     connect(r_prim.n, primary.p) annotation(
       Line(points = {{-10, -20}, {20, -20}, {20, -20}, {20, -20}}, color = {0, 0, 255}));
     connect(vPrim.p, r_prim.p) annotation(
@@ -68,7 +95,9 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) "resistance of the pri
     connect(ym, vSec.v) annotation(
       Line(points = {{-30, 40}, {-60, 40}, {-60, 10}}, color = {0, 0, 127}));
     annotation(
-      Diagram(graphics = {Text(origin = {100, -12}, extent = {{-20, 20}, {20, -20}}, textString = "core material\nunder test")}));end MagBench;
+      Diagram(graphics = {Text(origin = {100, -12}, extent = {{-20, 20}, {20, -20}}, textString = "core material\nunder test")}),
+      Icon(graphics = {Rectangle(fillColor = {210, 228, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(origin = {-36, 65}, extent = {{-42, 13}, {112, -67}}, textString = "Magnetic
+test bench"), Text(origin = {76, -39}, extent = {{-12, 13}, {12, -13}}, textString = "B"), Text(origin = {76, -69}, extent = {{-12, 13}, {12, -13}}, textString = "H"), Text(origin = {-19, -35}, extent = {{-57, 15}, {57, -15}}, textString = "n1=%n1"), Text(origin = {-19, -71}, extent = {{-57, 15}, {57, -15}}, textString = "n2=%n2")}, coordinateSystem(initialScale = 0.1)));end MagBench;
 
   model RepCtrl "Repetitive controller"
   
