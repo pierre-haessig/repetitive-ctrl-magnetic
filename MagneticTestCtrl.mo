@@ -20,33 +20,27 @@ package MagneticTestCtrl "About the control of the voltage of magnetic testbench
       Diagram(graphics = {Text(origin = {-11, 56}, extent = {{-63, 12}, {63, -12}}, textString = "Rep controller with the magnetic experiment")}));end Experiment;
 
 model MagBench
-Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = 100, i(fixed = false))  annotation(
-    Placement(visible = true, transformation(origin = {30, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance primary(N = 100, i(fixed = false))  "primary winding" annotation(
+      Placement(visible = true, transformation(origin = {30, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Magnetic.FluxTubes.Basic.Ground groundMag annotation(
     Placement(visible = true, transformation(origin = {40, -60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance secondary(N = 100, i(fixed = false))  annotation(
-    Placement(visible = true, transformation(origin = {30, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+Modelica.Magnetic.FluxTubes.Basic.ElectroMagneticConverterWithLeakageInductance secondary(N = 100, i(fixed = false))  "secondary winding" annotation(
+      Placement(visible = true, transformation(origin = {30, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Electrical.Analog.Sensors.VoltageSensor vSec annotation(
     Placement(visible = true, transformation(origin = {-50, 10}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
 Modelica.Blocks.Interfaces.RealOutput ym annotation(
     Placement(visible = true, transformation(origin = {-30, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 Modelica.Blocks.Interfaces.RealInput u annotation(
     Placement(visible = true, transformation(origin = {-100, -30}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0)));
-replaceable Modelica.Magnetic.FluxTubes.Shapes.HysteresisAndMagnets.GenericHystTellinenSoft testCore( MagRel(fixed = true, start = 0.1))  "core shaped magnetic material under test" annotation(
+replaceable Modelica.Magnetic.FluxTubes.Shapes.HysteresisAndMagnets.GenericHystTellinenSoft core( MagRel(fixed = true, start = 0.1))  "core shaped magnetic material under test" annotation(
     Placement(visible = true, transformation(origin = {70, -10}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
 Modelica.Electrical.Analog.Basic.Ground ground annotation(
     Placement(visible = true, transformation(origin = {-50, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-Modelica.Electrical.Analog.Basic.Resistor Rpar(R = 1e3)  "parallel resistor" annotation(
-    Placement(visible = true, transformation(origin = {4, -30}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
-    Placement(visible = true, transformation(origin = {-20, -20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) "resistance of the primary winding" annotation(
+      Placement(visible = true, transformation(origin = {-20, -20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     Modelica.Electrical.Analog.Sources.SignalVoltage vPrim annotation(
       Placement(visible = true, transformation(origin = {-50, -30}, extent = {{-10, 10}, {10, -10}}, rotation = -90)));
   equation
-    connect(Rpar.n, primary.n) annotation(
-      Line(points = {{4, -40}, {20, -40}, {20, -40}, {20, -40}}, color = {0, 0, 255}));
-    connect(Rpar.p, primary.p) annotation(
-      Line(points = {{4, -20}, {20, -20}, {20, -20}, {20, -20}}, color = {0, 0, 255}));
     connect(r_prim.n, primary.p) annotation(
       Line(points = {{-10, -20}, {20, -20}, {20, -20}, {20, -20}}, color = {0, 0, 255}));
     connect(vPrim.p, r_prim.p) annotation(
@@ -57,9 +51,9 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       Line(points = {{-50, -60}, {-50, -60}, {-50, -40}, {-50, -40}, {-50, -40}, {-50, -40}}, color = {0, 0, 255}));
     connect(u, vPrim.v) annotation(
       Line(points = {{-100, -30}, {-60, -30}, {-60, -30}, {-58, -30}, {-58, -30}}, color = {0, 0, 127}));
-    connect(secondary.port_p, testCore.port_p) annotation(
+    connect(secondary.port_p, core.port_p) annotation(
       Line(points = {{40, 20}, {70, 20}, {70, 0}}, color = {255, 127, 0}));
-    connect(testCore.port_n, primary.port_n) annotation(
+    connect(core.port_n, primary.port_n) annotation(
       Line(points = {{70, -20}, {70, -40}, {40, -40}}, color = {255, 127, 0}));
     connect(secondary.port_n, primary.port_p) annotation(
       Line(points = {{40, 0}, {40, -20}}, color = {255, 127, 0}));
@@ -73,7 +67,8 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       Line(points = {{-50, -60}, {-56, -60}, {-56, -60}, {-60, -60}, {-60, 2.98024e-07}, {-50, 2.98024e-07}, {-50, 2.98024e-07}, {-50, 2.98024e-07}, {-50, 2.98024e-07}}, color = {0, 0, 255}));
     connect(ym, vSec.v) annotation(
       Line(points = {{-30, 40}, {-60, 40}, {-60, 10}}, color = {0, 0, 127}));
-  end MagBench;
+    annotation(
+      Diagram(graphics = {Text(origin = {100, -12}, extent = {{-20, 20}, {20, -20}}, textString = "core material\nunder test")}));end MagBench;
 
   model RepCtrl "Repetitive controller"
   
@@ -190,7 +185,8 @@ fc=%fc Hz", horizontalAlignment = TextAlignment.Left),
       connect(pulse.y, magBench.u) annotation(
         Line(points = {{-16, 0}, {18, 0}, {18, 0}, {20, 0}}, color = {0, 0, 127}));
     annotation(
-        experiment(StartTime = 0, StopTime = 0.1, Tolerance = 1e-6, Interval = 2e-05));
+        experiment(StartTime = 0, StopTime = 0.1, Tolerance = 1e-6, Interval = 2e-05),
+        Diagram(graphics = {Text(origin = {-27, 65}, extent = {{-53, 15}, {107, -5}}, textString = "Test the magnetic system with a square input wave")}));
     end testMagBench;
   end tests;
   annotation(
