@@ -177,16 +177,28 @@ fc=%fc Hz", horizontalAlignment = TextAlignment.Left),
 
     model testMagBench
       extends Modelica.Icons.Example;
-  MagBench magBench annotation(
-        Placement(visible = true, transformation(origin = {32, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  MagneticTestCtrl.MagBench magBench annotation(
+        Placement(visible = true, transformation(origin = {50, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   Modelica.Blocks.Sources.Pulse pulse(amplitude = 2, offset = -1, period = 1 / 50, startTime = -0.25 / 50)  annotation(
-        Placement(visible = true, transformation(origin = {-28, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Placement(visible = true, transformation(origin = {-30, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Sine sine(freqHz = 50)  annotation(
+        Placement(visible = true, transformation(origin = {-30, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Logical.Switch switch "switch between sine and pulse inputs" annotation(
+        Placement(visible = true, transformation(origin = {10, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.BooleanConstant useSine(k = false)  annotation(
+        Placement(visible = true, transformation(origin = {-50, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     equation
-      connect(pulse.y, magBench.u) annotation(
-        Line(points = {{-16, 0}, {18, 0}, {18, 0}, {20, 0}}, color = {0, 0, 127}));
+    connect(useSine.y, switch.u2) annotation(
+        Line(points = {{-38, 0}, {-4, 0}, {-4, 0}, {-2, 0}}, color = {255, 0, 255}));
+    connect(pulse.y, switch.u3) annotation(
+        Line(points = {{-18, -30}, {-14, -30}, {-14, -8}, {-2, -8}, {-2, -8}}, color = {0, 0, 127}));
+    connect(sine.y, switch.u1) annotation(
+        Line(points = {{-18, 30}, {-12, 30}, {-12, 8}, {-2, 8}, {-2, 8}}, color = {0, 0, 127}));
+    connect(switch.y, magBench.u) annotation(
+        Line(points = {{22, 0}, {38, 0}, {38, 0}, {38, 0}}, color = {0, 0, 127}));
     annotation(
         experiment(StartTime = 0, StopTime = 0.1, Tolerance = 1e-6, Interval = 2e-05),
-        Diagram(graphics = {Text(origin = {-27, 65}, extent = {{-53, 15}, {107, -5}}, textString = "Test the magnetic system with a square input wave")}));
+        Diagram(graphics = {Text(origin = {-27, 65}, extent = {{-53, 15}, {107, -5}}, textString = "Test the magnetic system with a square/sine input wave")}));
     end testMagBench;
   end tests;
   annotation(
