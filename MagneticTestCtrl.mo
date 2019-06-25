@@ -75,11 +75,12 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       Line(points = {{-30, 40}, {-60, 40}, {-60, 10}}, color = {0, 0, 127}));
   end MagBench;
 
-  model MagCtrl
+  model RepCtrl "Repetitive controller"
   
   import Modelica.Constants.pi;
   
-  parameter Real k "feedback gain";
+  parameter Real k=1 "feedback gain";
+  parameter Real ffg=1 "feedforward gain";
   parameter Modelica.SIunits.Frequency f0 "fundamental frequency of the perturbation to reject";
   parameter Modelica.SIunits.Frequency fc "cutoff frequency of the low pass filter in series with the delay (should be >f0)";
   
@@ -91,7 +92,7 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   Modelica.Blocks.Math.Feedback feedback annotation(
       Placement(visible = true, transformation(origin = {-80, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Math.Gain gain(k = k)  annotation(
+  Modelica.Blocks.Math.Gain gainFB(k = k)  "feedback gain" annotation(
       Placement(visible = true, transformation(origin = {-50, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   Modelica.Blocks.Continuous.FirstOrder firstOrder(T = 1/(2*pi*fc), y(fixed = true))  annotation(
       Placement(visible = true, transformation(origin = {30, -50}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
@@ -101,26 +102,28 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
       Placement(visible = true, transformation(origin = {-10, -50}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
   Modelica.Blocks.Math.Add addFF annotation(
       Placement(visible = true, transformation(origin = {80, 6}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  
+    Modelica.Blocks.Math.Gain gainFF(k = ffg) "feedforward gain" annotation(
+      Placement(visible = true, transformation(origin = {-10, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   protected
   parameter Boolean compLag=true "compensate the phase lag introduced by low pass filter in the computation of the delay";
   parameter Modelica.SIunits.Time td = if compLag then 1/f0 - firstOrder.T else 1/f0 "delay time of the repetitive feedback";
   
   equation
-  
-  connect(addFF.u1, ysp) annotation(
-      Line(points = {{68, 12}, {60, 12}, {60, 60}, {-96, 60}, {-96, 40}, {-120, 40}, {-120, 40}}, color = {0, 0, 127}));
+    connect(feedback.y, gainFB.u) annotation(
+      Line(points = {{-70, 40}, {-68, 40}, {-68, 0}, {-62, 0}, {-62, 0}}, color = {0, 0, 127}));
+    connect(gainFF.u, ysp) annotation(
+      Line(points = {{-22, 60}, {-96, 60}, {-96, 40}, {-116, 40}, {-116, 40}, {-120, 40}}, color = {0, 0, 127}));
+    connect(gainFF.y, addFF.u1) annotation(
+      Line(points = {{2, 60}, {60, 60}, {60, 12}, {68, 12}, {68, 12}}, color = {0, 0, 127}));
   connect(addFF.u2, add.y) annotation(
       Line(points = {{68, 0}, {2, 0}, {2, 0}, {2, 0}}, color = {0, 0, 127}));
   connect(addFF.y, u) annotation(
       Line(points = {{92, 6}, {94, 6}, {94, 0}, {110, 0}, {110, 0}}, color = {0, 0, 127}));
-    connect(feedback.y, gain.u) annotation(
-      Line(points = {{-71, 40}, {-62, 40}, {-62, 0}}, color = {0, 0, 127}));
     connect(delay.u, firstOrder.y) annotation(
       Line(points = {{2, -50}, {20, -50}, {20, -50}, {18, -50}}, color = {0, 0, 127}));
     connect(delay.y, add.u2) annotation(
       Line(points = {{-21, -50}, {-33, -50}, {-33, -6}, {-21, -6}, {-21, -6}, {-21, -6}, {-21, -6}}, color = {0, 0, 127}));
-    connect(gain.y, add.u1) annotation(
+  connect(gainFB.y, add.u1) annotation(
       Line(points = {{-39, 0}, {-37, 0}, {-37, 0}, {-33, 0}, {-33, 6}, {-21, 6}, {-21, 6}, {-23, 6}, {-23, 6}}, color = {0, 0, 127}));
     connect(firstOrder.u, add.y) annotation(
       Line(points = {{42, -50}, {51, -50}, {51, -50}, {60, -50}, {60, 0}, {2, 0}, {2, 0}, {2, 0}, {2, 0}}, color = {0, 0, 127}));
@@ -129,54 +132,52 @@ Modelica.Electrical.Analog.Basic.Resistor r_prim(R = 0.5) annotation(
     connect(ym, feedback.u2) annotation(
       Line(points = {{-120, -40}, {-80, -40}, {-80, 32}}, color = {0, 0, 127}));
   annotation(
-      Icon(graphics = {Text(origin = {-2, 60}, extent = {{-80, 20}, {80, -20}}, textString = "Rep. ctrl", textStyle = {TextStyle.Bold}), Text(origin = {9, -31}, extent = {{-89, 51}, {71, -49}}, textString = "k=%k
+      Icon(graphics = {
+      Rectangle(fillColor = {255, 254, 209}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}),
+      Text(origin = {-2, 60}, extent = {{-80, 20}, {80, -20}}, textString = "Rep. ctrl", textStyle = {TextStyle.Bold}),
+      Text(origin = {9, -31}, extent = {{-89, 51}, {71, -49}}, textString = "k=%k
 f0=%f0 Hz
-fc=%fc Hz", horizontalAlignment = TextAlignment.Left), Rectangle(extent = {{-100, 100}, {100, -100}})}, coordinateSystem(initialScale = 0.1)));end MagCtrl;
+fc=%fc Hz", horizontalAlignment = TextAlignment.Left),
+      Text(origin = {0, 120}, lineColor = {0, 0, 255}, extent = {{-100, 20}, {100, -20}}, textString = "%name")}, coordinateSystem(initialScale = 0.1)));end RepCtrl;
 
   package tests
     extends Modelica.Icons.ExamplesPackage;
   
-    model testCtrl "test the Repetitive ctrl on a simplified system"
+    model testCtrl "test the Repetitive ctrl on a simple system"
       extends Modelica.Icons.Example;
+      parameter Modelica.SIunits.Frequency f0=50 "fundamental frequency of the system";
+      parameter Real aPert = 1.0 "amplitude of the sinusoidal perturbation";
+      parameter Integer n(min=1) = 3 "harmonic of the sinusoidal perturbation";
+      parameter Modelica.SIunits.Time startTimePert=0 "startTime of the perturbation";
+      parameter Modelica.SIunits.Angle phasePert = 0 "phase of the sinusoidal perturbation";
     
-    MagneticTestCtrl.MagCtrl magCtrl(f0 = 50, k = 1, fc = 1e3)  annotation(
+    MagneticTestCtrl.RepCtrl ctrl(f0 = f0, fc = 1e3, k = 1 / 0.8)  "repetitive controller" annotation(
         Placement(visible = true, transformation(origin = {-10, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Sine sineF1(freqHz = 50, phase = 1.5708)  annotation(
-        Placement(visible = true, transformation(origin = {-50, 78}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Sine sineF3(freqHz = 150)  annotation(
-        Placement(visible = true, transformation(origin = {-50, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Pulse ref(amplitude = 2, offset = -1, period = 1 / 50) "reference signal" annotation(
+  Modelica.Blocks.Sources.Sine sinePert(amplitude = aPert, freqHz = n * f0, phase = phasePert, startTime = startTimePert) "sinusoidal perturbation on  process input" annotation(
+        Placement(visible = true, transformation(origin = {-10, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Pulse ref(amplitude = 2, offset = -1, period = 1 / f0) "reference signal" annotation(
         Placement(visible = true, transformation(origin = {-90, 4}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Continuous.FirstOrder process(T = 1e-5, k = 0.8, y(fixed = true))  annotation(
+  Modelica.Blocks.Continuous.FirstOrder process(T = 1e-5, k = 0.8, y(fixed = true))  "process being controlled" annotation(
         Placement(visible = true, transformation(origin = {70, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Math.Add addSin annotation(
-        Placement(visible = true, transformation(origin = {-10, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   Modelica.Blocks.Math.Add addPert annotation(
         Placement(visible = true, transformation(origin = {30, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Math.Gain gainPert(k = 1)  annotation(
-        Placement(visible = true, transformation(origin = {22, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
   Modelica.Blocks.Continuous.FirstOrder refFilter(T = 1e-5, k = 1, y(fixed = true)) "filters out the fast fluctuation of the reference that the process cannot reproduce" annotation(
         Placement(visible = true, transformation(origin = {-50, 4}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     equation
+      connect(sinePert.y, addPert.u1) annotation(
+        Line(points = {{1, 50}, {8, 50}, {8, 6}, {18, 6}}, color = {0, 0, 127}));
       connect(ref.y, refFilter.u) annotation(
         Line(points = {{-78, 4}, {-62, 4}, {-62, 4}, {-62, 4}}, color = {0, 0, 127}));
-      connect(refFilter.y, magCtrl.ysp) annotation(
+  connect(refFilter.y, ctrl.ysp) annotation(
         Line(points = {{-38, 4}, {-22, 4}, {-22, 4}, {-22, 4}}, color = {0, 0, 127}));
-      connect(gainPert.y, addPert.u1) annotation(
-        Line(points = {{34, 60}, {40, 60}, {40, 40}, {8, 40}, {8, 6}, {18, 6}, {18, 6}}, color = {0, 0, 127}));
-      connect(addSin.y, gainPert.u) annotation(
-        Line(points = {{2, 60}, {10, 60}, {10, 60}, {10, 60}}, color = {0, 0, 127}));
-  connect(process.y, magCtrl.ym) annotation(
+  connect(process.y, ctrl.ym) annotation(
         Line(points = {{82, 0}, {90, 0}, {90, -40}, {-32, -40}, {-32, -4}, {-22, -4}}, color = {0, 0, 127}));
-      connect(magCtrl.u, addPert.u2) annotation(
+  connect(ctrl.u, addPert.u2) annotation(
         Line(points = {{2, 0}, {8, 0}, {8, -6}, {18, -6}, {18, -6}}, color = {0, 0, 127}));
-  connect(addPert.y, process.u) annotation(
+      connect(addPert.y, process.u) annotation(
         Line(points = {{42, 0}, {56, 0}, {56, 0}, {58, 0}}, color = {0, 0, 127}));
-    connect(sineF3.y, addSin.u2) annotation(
-        Line(points = {{-39, 40}, {-37, 40}, {-37, 40}, {-33, 40}, {-33, 54}, {-21, 54}, {-21, 55}, {-23, 55}, {-23, 54}}, color = {0, 0, 127}));
-    connect(sineF1.y, addSin.u1) annotation(
-        Line(points = {{-39, 78}, {-33, 78}, {-33, 66}, {-23, 66}}, color = {0, 0, 127}));
-    annotation(experiment(StartTime=0, StopTime = 0.2, Tolerance = 1e-06, Interval = 1e-05));
+      annotation(experiment(StartTime = 0, StopTime = 0.2, Tolerance = 1e-06, Interval = 1e-05),
+        Diagram(graphics = {Text(origin = {0, 90}, extent = {{-100, 10}, {100, -10}}, textString = "Test of the repetitive controller\non a simple system")}, coordinateSystem(initialScale = 0.1)));
     end testCtrl;
 
     model testMagBench
