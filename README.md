@@ -16,5 +16,9 @@ Repository address: https://github.com/pierre-haessig/repetitive-ctrl-magnetic
 
 The report available here is deposited on the HAL archive:
 
-Pierre Haessig, “̈́Repetitive control for magnetic flux control”, 2019.
+Pierre Haessig, “Repetitive control for magnetic flux control”, 2019.
 https://hal.archives-ouvertes.fr/hal-02287247
+
+## Repetitive control
+
+![repetitive control block diagram](figures/repetitive_ctrl_diag.png)
