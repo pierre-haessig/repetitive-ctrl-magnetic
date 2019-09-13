@@ -14,7 +14,7 @@ in particular using the
 
 Repository address: https://github.com/pierre-haessig/repetitive-ctrl-magnetic
 
-The [report](Repetitive control for magnetic test.pdf) available here is deposited on the HAL archive:
+The [report](Repetitive%20control%20for%20magnetic%20test.pdf) available here is deposited on the HAL archive:
 
 Pierre Haessig, “Repetitive control for magnetic flux control”, 2019.
 https://hal.archives-ouvertes.fr/hal-02287247
